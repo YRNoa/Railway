@@ -20,7 +20,19 @@ app.use((req, res, next) => {
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    // protocolTimeout: ceiling for a single CDP call. The default can fire on a
+    // resource-starved host mid-sendMessage → "Runtime.callFunctionOn timed out".
+    protocolTimeout: 120000,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      // Critical on Railway/Docker: the default /dev/shm (~64MB) is too small,
+      // so Chromium stalls on heavy page evaluations (e.g. sending a message).
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--disable-extensions",
+      "--no-first-run",
+    ],
   },
 });
 
